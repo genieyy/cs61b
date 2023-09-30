@@ -107,6 +107,7 @@ public class Model extends Observable {
      *    value, then the leading two tiles in the direction of motion merge,
      *    and the trailing tile does not.
      * */
+
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
@@ -115,34 +116,60 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
         int size= board.size();
+        boolean [][] hasmerged=new boolean[size][size];
+        for(int i=0;i< size;i++){
+            for(int j=0;j< size;j++){
+                hasmerged[i][j]=false;
+            }
+        }
+
         for(int c=0;c<size;c++){//each col
-            boolean hasmerged=false;//the last move is merge
-            for(int r=size()-2;r>=0;r--){//each row
-                int j=r+1;//find the first tile above it not null and equals to it
-                boolean flag=false;//if successfully find j
-                for(j=r+1;j<size;j++){
-                    //find the first tile above it not null and equals to it
-                    if(board.tile(c,j)!=null){//find the first tile above it not null
-                        if(board.tile(c,j).value()==board.tile(c,r).value()) {
-                            flag = true;//successfully find j
-                            //find the first tile above it not null and equals to it
+            //the last move is merge
+            for(int r=size()-2;r>=0;r--){
+                if(board.tile(c,r)!=null) {//each row
+                    int j;//find the first tile above it not null and equals to it
+                    //if j==size,no tilt nonnull above it
+                    boolean flag = false;//if successfully find j
+                    for (j = r + 1; j < size; j++) {
+                        //find the first tile above it not null and equals to it
+                        if (board.tile(c, j) != null) {//find the first tile above it not null
+                            if (board.tile(c, j).value() == board.tile(c, r).value()) {
+                                flag = true;//successfully find j
+                                //find the first tile above it not null and equals to it
+                            }
+                            break;//find the first tile above it not null
                         }
-                        break;
                     }
-                }
+                    System.out.printf("%d 列%d 行%d\n",j,c,r);
 
-                if(hasmerged){
-                    if(j-1!=r)changed=true;
-                    board.move(c,j-1,board.tile(c,r));
-                } else if (!flag) {
-                    if(j-1!=r)changed=true;
-                    board.move(c,j-1,board.tile(c,r));
-                }
-                else{
-                    if(j!=r)changed=true;
-                    hasmerged=board.move(c,j,board.tile(c,r));
-                }
 
+                    if(flag){
+                        //find the first tile above it not null and equals to it
+                        if(!hasmerged[c][j]) {
+                            //the tile of the place has not been merged
+                            changed = true;
+                            score += 2 * board.tile(c, r).value();
+                            hasmerged[c][j] = board.move(c, j, board.tile(c, r));
+                        }
+                        else{
+                            changed = true;
+                            board.move(c, j - 1, board.tile(c, r));
+                        }
+
+                    }
+                    else{
+                        if(j!=r+1) {
+                            changed = true;
+                            board.move(c, j - 1, board.tile(c, r));
+                        }
+
+                    }
+
+
+
+
+
+                }
             }
         }
         checkGameOver();
