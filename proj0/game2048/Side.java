@@ -5,7 +5,7 @@ package game2048;
 public enum Side {
     /** The parameters (COL0, ROW0, DCOL, and DROW) for each of the
      *  symbolic directions, D, below are to be interpreted as follows:
-     *     The board's standard orientation has the top of the board
+     *     The board's standard   has the top of the board
      *     as NORTH, and rows and columns (see Model) are numbered
      *     from its lower-left corner. Consider the board oriented
      *     so that side D of the board is farthest from you. Then
@@ -22,7 +22,7 @@ public enum Side {
      *  to compute the result of tilting the board in any particular
      *  direction. */
 
-    NORTH(0, 0, 0, 1), EAST(0, 1, 1, 0), SOUTH(1, 1, 0, -1),
+    NORTH(0, 0, 0, 1), EAST(0, 1,  1, 0), SOUTH(1, 1, 0, -1),
     WEST(1, 0, -1, 0);
 
     /** The side that is in the direction (DCOL, DROW) from any square
