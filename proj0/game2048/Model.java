@@ -140,7 +140,7 @@ public class Model extends Observable {
                             break;//find the first tile above it not null
                         }
                     }
-                    System.out.printf("%d 列%d 行%d\n",j,c,r);
+                    
 
 
                     if(flag){
