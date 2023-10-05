@@ -29,13 +29,13 @@ public class BuggyAList<Item> {
         Item[] a = (Item[]) new Object[capacity];
         if(size<capacity){
             for (int i = 0; i < size; i += 1) {
-                System.out.println(items[i]);
+
                 a[i] = items[i];
             }
         }
         else{
             for (int i = 0; i < capacity; i += 1) {
-                System.out.println(items[i]);
+
                 a[i] = items[i];
             }
         }
