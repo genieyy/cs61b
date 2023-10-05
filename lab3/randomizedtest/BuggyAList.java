@@ -27,16 +27,26 @@ public class BuggyAList<Item> {
     /** Resizes the underlying array to the target capacity. */
     private void resize(int capacity) {
         Item[] a = (Item[]) new Object[capacity];
-        for (int i = 0; i < size; i += 1) {
-            a[i] = items[i];
+        if(size<capacity){
+            for (int i = 0; i < size; i += 1) {
+                System.out.println(items[i]);
+                a[i] = items[i];
+            }
         }
+        else{
+            for (int i = 0; i < capacity; i += 1) {
+                System.out.println(items[i]);
+                a[i] = items[i];
+            }
+        }
+
         items = a;
     }
 
     /** Inserts X into the back of the list. */
     public void addLast(Item x) {
         if (size == items.length) {
-            resize(size * 2);
+            resize(size+1);
         }
         items[size] = x;
         size = size + 1;
@@ -59,11 +69,11 @@ public class BuggyAList<Item> {
     /** Deletes item from back of the list and
       * returns deleted item. */
     public Item removeLast() {
-        if ((size < items.length / 4) && (size > 4)) {
-            resize(size / 4);
-        }
         Item x = getLast();
-        items[size - 1] = null;
+        if (size == items.length) {
+            resize(size -1);
+        }
+
         size = size - 1;
         return x;
     }
