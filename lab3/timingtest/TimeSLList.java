@@ -29,10 +29,10 @@ public class TimeSLList {
 
 
 
-        int N=10000;
-        for(int j=0;j<3;j++){
+
+        for(int j=1000;j<128000;j*=2){
             SLList <Integer>test=new SLList<>();
-            for(int i=0;i<N;++i){
+            for(int i=0;i<j;i++){
                 test.addLast(5);
             }
             int M=10000;
@@ -42,10 +42,10 @@ public class TimeSLList {
             }
 
             double timeInSeconds=sw.elapsedTime();
-            Ns.addLast(N);
+            Ns.addLast(j);
             times.addLast(timeInSeconds);
             opCounts.addLast(M);
-            N*=2;
+
         }
 
 
