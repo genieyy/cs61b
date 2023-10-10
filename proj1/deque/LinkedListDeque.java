@@ -1,9 +1,8 @@
 package deque;
 
-import java.util.Deque;
 import java.util.Iterator;
 
-public class LinkedListDeque<T>{
+public class LinkedListDeque<T> implements Deque<T>{
     private Node<T> firstsentinel;
     private int size;
     private Node<T> lastsentinel;
@@ -30,12 +29,6 @@ public class LinkedListDeque<T>{
         size=0;
     }
 
-    /*public Node<T> getFirst(){
-        return firstsentinel.next;
-    }
-    public Node<T> getLast(){
-        return lastsentinel.last;
-    }*/
     public void addFirst(T v){
         Node<T>item=new Node<>(v,firstsentinel,firstsentinel.next);
         firstsentinel.next.last=item;
@@ -113,7 +106,7 @@ public class LinkedListDeque<T>{
         if (o == null) {
             return false;
         }
-        if (!(o instanceof LinkedListDeque)){
+        if (!(o instanceof LinkedListDeque ls)){
             return false;
         }
 
@@ -129,6 +122,11 @@ public class LinkedListDeque<T>{
             }
         }
         return true;
+    }
+
+    @Override
+    public void resize(int v) {
+
     }
 
 }

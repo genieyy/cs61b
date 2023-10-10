@@ -1,9 +1,8 @@
 package deque;
 
-import java.util.Arrays;
 import java.util.Iterator;
 
-public class ArrayDeque<T>{
+public class ArrayDeque<T> implements Deque<T>{
     private T[] array;
     private int size;
     public ArrayDeque(){
@@ -16,12 +15,13 @@ public class ArrayDeque<T>{
         array=a;
     }
     public void addFirst(T item){
-        if(array.length==size){
-            resize(size*2);
+        if(array.length<=size){
+            resize((size+1)*2);
         }
-        size+=1;
-        T[] a=(T[])new Object[size];
+
+        T[] a=(T[])new Object[size+1];
         System.arraycopy(array,0,a,1,size);
+        size+=1;
         a[0]=item;
         array=a;
     }
@@ -60,7 +60,19 @@ public class ArrayDeque<T>{
         return array[index];
     }
     public Iterator<T> iterator(){
-        return Arrays.stream(array).iterator();
+        return new Iterator<T>() {
+            int loc=0;
+            @Override
+            public boolean hasNext() {
+                if(loc==size()-1)return false;
+                return true;
+            }
+            @Override
+            public T next() {
+                if(hasNext())return get(loc++);
+                else return null;
+            }
+        };
     }
     public boolean equals(Object o){
         if(o instanceof ArrayDeque){
