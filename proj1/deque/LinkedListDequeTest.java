@@ -1,10 +1,13 @@
 package deque;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 
-/** Performs some basic linked list tests. */
+/**
+ * Performs some basic linked list tests.
+ */
 public class LinkedListDequeTest {
 
     @Test
@@ -13,7 +16,7 @@ public class LinkedListDequeTest {
      *
      * && is the "and" operation. */
     public void addIsEmptySizeTest() {
-        LinkedListDeque<Integer> l=new LinkedListDeque<>();
+        LinkedListDeque<Integer> l = new LinkedListDeque<>();
         assertTrue(l.isEmpty());
 
         System.out.println("Make sure to uncomment the lines below (and delete this print statement).");
@@ -42,7 +45,7 @@ public class LinkedListDequeTest {
     @Test
     /** Adds an item, then removes an item, and ensures that dll is empty afterwards. */
     public void addRemoveTest() {
-        LinkedListDeque<Integer> l=new LinkedListDeque<>();
+        LinkedListDeque<Integer> l = new LinkedListDeque<>();
 
         l.addLast(5);
         l.removeLast();
@@ -88,8 +91,8 @@ public class LinkedListDequeTest {
     @Test
     /* Check if you can create LinkedListDeques with different parameterized types*/
     public void multipleParamTest() {
-        LinkedListDeque<String>  lld1 = new LinkedListDeque<String>();
-        LinkedListDeque<Double>  lld2 = new LinkedListDeque<Double>();
+        LinkedListDeque<String> lld1 = new LinkedListDeque<String>();
+        LinkedListDeque<Double> lld2 = new LinkedListDeque<Double>();
         LinkedListDeque<Boolean> lld3 = new LinkedListDeque<Boolean>();
 
         lld1.addFirst("string");
