@@ -2,7 +2,13 @@ package gitlet;
 
 // TODO: any imports you need here
 
+import java.io.File;
+import java.io.Serializable;
+import java.text.SimpleDateFormat;
 import java.util.Date; // TODO: You'll likely use this in this class
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -10,7 +16,7 @@ import java.util.Date; // TODO: You'll likely use this in this class
  *
  *  @author TODO
  */
-public class Commit {
+public class Commit implements Serializable{
     /**
      * TODO: add instance variables here.
      *
@@ -21,6 +27,33 @@ public class Commit {
 
     /** The message of this Commit. */
     private String message;
+    public String id;
+    public LinkedList<Commit> fatherCm;
+    public String time;
+    public HashMap<String,Blob> file2blobs;
 
     /* TODO: fill in the rest of this class. */
+    public Commit(String m){
+        message=m;
+    }
+    public Commit(Commit fa,HashMap fblo,String m){
+        message=m;
+        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        time= formatter.format(new Date(System.currentTimeMillis()));
+
+        fatherCm.add(fa);
+        id= Utils.sha1(fa.id,message,time);//id final consider
+
+        Map<String,Blob> map =fblo;
+        for(Map.Entry<String,Blob> i:map.entrySet()){
+            file2blobs.put(i.getKey(),i.getValue());
+        }
+
+    }
+    public void saveCommit(){
+        File f=Utils.join(Repository.GITLET_DIR,this.id);
+        Utils.writeObject(f,this);
+    }
 }
+
+
