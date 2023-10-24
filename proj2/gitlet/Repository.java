@@ -33,10 +33,10 @@ public class Repository {
     public static final File blobs = join(objects,"blobs");
     public static final File refs=Utils.join(GITLET_DIR,"refs");//heads->master
     public static final File heads=Utils.join(refs,"heads");//master,other
-    public static final File Temp=Utils.join(GITLET_DIR,"Temp");//for git add
     public static File Head=Utils.join(GITLET_DIR,"Head");//recent commit
-    public static Commit head=readObject(Head,Commit.class);
-    public static HashMap<String,Blob>file2blobs;//addfile blob  deleted after new commit
+    public static Commit head;
+    public final static File TempFile=join(Repository.GITLET_DIR,"Temp");
+    public static HashMap<String,Blob>B;//temparary blobs
     public static Commit InitCommit;//init commit
 
     /* TODO: fill in the rest of this class. */
@@ -51,23 +51,25 @@ public class Repository {
         commits.mkdirs();
         blobs.mkdirs();
         refs.mkdirs();
-        Temp.mkdirs();//make directory
-
+        heads.mkdirs();
+        Temp T=new Temp(B);
+        //make directory
+        Utils.writeObject(TempFile,T);
         InitCommit=new Commit("initcommit");
         File master=join(heads,"master");
         Utils.writeObject(Head,InitCommit);
         Utils.writeObject(master,InitCommit);
-        head=InitCommit;
+
     }
     public static Commit commitbuild(String m) {
-
         head=Utils.readObject(Head,Commit.class);
-        Commit c=new Commit(head,file2blobs,m);
+        B=readObject(TempFile,Temp.class).blobs;//read temprepo
+        Commit c=new Commit(head,B,m);
         head=c;
         Utils.writeObject(Head,head);//save head
-        file2blobs.clear();
-        Utils.writeObject(Temp,file2blobs);//save temprepo
-
+        B.clear();//temprepo clear
+        Temp t=new Temp(B);
+        t.saveTemp();//save temprepo
         c.saveCommit();
         return c;
     }
@@ -77,20 +79,24 @@ public class Repository {
             System.out.println("File does not exist.");
             exit(0);
         }
-
-        for ( Blob blob : file2blobs.values()) {
-            if (Utils.sha1(Utils.readObject(file,String.class)).equals(blob.id)) {
+        B=readObject(TempFile,Temp.class).blobs;//read temprepo
+        if(B==null)B=new HashMap<>();
+        for (Blob blob : B.values()) {
+            if (Utils.sha1(Utils.readObject(file, String.class)).equals(blob.id)) {
                 return;
             }//temprepo have no this file
         }
-        for(Blob blob : head.file2blobs.values()){
-            if (Utils.sha1(Utils.readObject(file,String.class)).equals(blob.id)) {
-                return;
-            }//headcommit have no this file
+        head=readObject(Head, Commit.class);
+        if(head.file2blobs!=null) {
+            for (Blob blob : head.file2blobs.values()) {
+                if (Utils.sha1(Utils.readObject(file, String.class)).equals(blob.id)) {
+                    return;
+                }//headcommit have no this file
+            }
         }
-        file2blobs.put(filename,new Blob(filename));
-
-        Utils.writeObject(Temp,file2blobs);//save temprepo
+        B.put(filename,new Blob(filename));
+        Temp t=new Temp(B);
+        t.saveTemp();//save temprepo
     }
     public static void rmfiles(String filename){
         File file=Utils.join(GITLET_DIR,filename);
@@ -101,7 +107,7 @@ public class Repository {
     }
 
     public static void logcommits() {
-        Commit p=Head;
+        Commit p=head;
         do{
             if(p.fatherCm.size()>1){
                 System.out.println("===\n" +

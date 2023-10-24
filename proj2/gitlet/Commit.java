@@ -32,6 +32,7 @@ public class Commit implements Serializable{
     public String time;
     public HashMap<String,Blob> file2blobs;
 
+
     /* TODO: fill in the rest of this class. */
     public Commit(String m){
         message=m;
@@ -51,7 +52,7 @@ public class Commit implements Serializable{
 
     }
     public void saveCommit(){
-        File f=Utils.join(Repository.GITLET_DIR,this.id);
+        File f=Utils.join(Repository.commits,this.id);
         Utils.writeObject(f,this);
     }
 }
