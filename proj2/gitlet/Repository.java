@@ -28,41 +28,45 @@ public class Repository {
     public static final File CWD = new File(System.getProperty("user.dir"));
     /** The .gitlet directory. */
     public static final File GITLET_DIR = join(CWD, ".gitlet");
-    public static final File TempRepo=Utils.join(GITLET_DIR,"TempRepo");
-    public static final File headfile=Utils.join(GITLET_DIR,"head");
-    public static HashMap<String,Commit> commits=null;//save all commit
-    public static Commit head;//recent commit
-    public static HashMap<String,Blob>file2blobs=null;//addfile blob  deleted after new commit
+    public static final File objects = join(GITLET_DIR, "objects");
+    public static final File commits = join(objects,"commits");
+    public static final File blobs = join(objects,"blobs");
+    public static final File refs=Utils.join(GITLET_DIR,"refs");//heads->master
+    public static final File heads=Utils.join(refs,"heads");//master,other
+    public static final File Temp=Utils.join(GITLET_DIR,"Temp");//for git add
+    public static File Head=Utils.join(GITLET_DIR,"Head");//recent commit
+    public static Commit head=readObject(Head,Commit.class);
+    public static HashMap<String,Blob>file2blobs;//addfile blob  deleted after new commit
     public static Commit InitCommit;//init commit
 
     /* TODO: fill in the rest of this class. */
     public static void setup() throws IOException {
         /*if(GITLET_DIR.exists()){
-            System.out.println("A Gitlet version-control system already exists in the current directory.");
+            System.out.print("A Gitlet version-control system already exists in the current directory.");
             exit(0);
 
         }*/
         GITLET_DIR.mkdirs();
-
-        headfile.createNewFile();
-        TempRepo.createNewFile();//make file
+        objects.mkdirs();
+        commits.mkdirs();
+        blobs.mkdirs();
+        refs.mkdirs();
+        Temp.mkdirs();//make directory
 
         InitCommit=new Commit("initcommit");
+        File master=join(heads,"master");
+        Utils.writeObject(Head,InitCommit);
+        Utils.writeObject(master,InitCommit);
         head=InitCommit;
-        Utils.writeObject(headfile,head);
-
-
     }
     public static Commit commitbuild(String m) {
-        head=Utils.readObject(headfile,Commit.class);
-        file2blobs=(HashMap<String,Blob>)Utils.readObject(TempRepo, HashMap.class);
-        Commit c=new Commit(head,file2blobs,m);
-        commits.put(c.id,c);//保存新commits
 
+        head=Utils.readObject(Head,Commit.class);
+        Commit c=new Commit(head,file2blobs,m);
         head=c;
-        Utils.writeObject(headfile,head);//save head
+        Utils.writeObject(Head,head);//save head
         file2blobs.clear();
-        Utils.writeObject(TempRepo,file2blobs);//save temprepo
+        Utils.writeObject(Temp,file2blobs);//save temprepo
 
         c.saveCommit();
         return c;
@@ -73,20 +77,20 @@ public class Repository {
             System.out.println("File does not exist.");
             exit(0);
         }
-        file2blobs=(HashMap<String,Blob>)Utils.readObject(TempRepo, HashMap.class);
+
         for ( Blob blob : file2blobs.values()) {
-            if (Utils.sha1(Utils.readContents(file)).equals(blob.id)) {
+            if (Utils.sha1(Utils.readObject(file,String.class)).equals(blob.id)) {
                 return;
             }//temprepo have no this file
         }
         for(Blob blob : head.file2blobs.values()){
-            if (Utils.sha1(Utils.readContents(file)).equals(blob.id)) {
+            if (Utils.sha1(Utils.readObject(file,String.class)).equals(blob.id)) {
                 return;
             }//headcommit have no this file
         }
         file2blobs.put(filename,new Blob(filename));
 
-        Utils.writeObject(TempRepo,file2blobs);//save temprepo
+        Utils.writeObject(Temp,file2blobs);//save temprepo
     }
     public static void rmfiles(String filename){
         File file=Utils.join(GITLET_DIR,filename);
@@ -97,7 +101,7 @@ public class Repository {
     }
 
     public static void logcommits() {
-        Commit p=head;
+        Commit p=Head;
         do{
             if(p.fatherCm.size()>1){
                 System.out.println("===\n" +
