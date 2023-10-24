@@ -28,9 +28,9 @@ public class Commit implements Serializable{
     /** The message of this Commit. */
     private String message;
     public String id;
-    public LinkedList<Commit> fatherCm;
+    public LinkedList<Commit> fatherCm=new LinkedList<>();
     public String time;
-    public HashMap<String,Blob> file2blobs;
+    public HashMap<String,Blob> file2blobs=new HashMap<>();
 
 
     /* TODO: fill in the rest of this class. */
@@ -43,13 +43,13 @@ public class Commit implements Serializable{
         time= formatter.format(new Date(System.currentTimeMillis()));
 
         fatherCm.add(fa);
-        id= Utils.sha1(fa.id,message,time);//id final consider
+        //id final consider
 
         Map<String,Blob> map =fblo;
         for(Map.Entry<String,Blob> i:map.entrySet()){
             file2blobs.put(i.getKey(),i.getValue());
         }
-
+        id= Utils.sha1(message,time,fatherCm.toString(),file2blobs.toString());
     }
     public void saveCommit(){
         File f=Utils.join(Repository.commits,this.id);
