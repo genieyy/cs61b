@@ -4,11 +4,9 @@ package gitlet;
 
 import java.io.File;
 import java.io.Serializable;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date; // TODO: You'll likely use this in this class
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -28,28 +26,61 @@ public class Commit implements Serializable{
     /** The message of this Commit. */
     private String message;
     public String id;
-    public LinkedList<Commit> fatherCm=new LinkedList<>();
+    public Commit fa;
+    public Commit secfa;
     public String time;
-    public HashMap<String,Blob> file2blobs=new HashMap<>();
+    public HashMap<Blob,String> blobsf2ile=new HashMap<>();
 
 
     /* TODO: fill in the rest of this class. */
-    public Commit(String m){
+    public Commit(String m) throws ParseException {
         message=m;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date epochTime = dateFormat.parse("1970-01-01 00:00:00");
+        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        time= formatter.format(epochTime);
     }
-    public Commit(Commit fa,HashMap fblo,String m){
+    public Commit(Commit far,HashMap fblo,String m){
+        message=m;
+        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        time= formatter.format(new Date(System.currentTimeMillis()));
+        fa=far;
+        Map<Blob,String> map =fblo;
+        blobsf2ile.putAll(map);
+        map =fa.blobsf2ile;
+        for(Map.Entry<Blob,String> i:map.entrySet()){
+            if(!blobsf2ile.containsKey(i.getKey())){
+                blobsf2ile.put(i.getKey(),i.getValue());
+            }
+        }//compare with head,save the blobs of far different with self
+
+        id= Utils.sha1(message,time,fa.toString(),secfa.toString(),blobsf2ile.toString());
+    }
+    public Commit(Commit far,Commit secfar,HashMap fblo,String m){
         message=m;
         SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
         time= formatter.format(new Date(System.currentTimeMillis()));
 
-        fatherCm.add(fa);
+        fa=far;
+        secfa=secfar;
         //id final consider
 
-        Map<String,Blob> map =fblo;
-        for(Map.Entry<String,Blob> i:map.entrySet()){
-            file2blobs.put(i.getKey(),i.getValue());
-        }
-        id= Utils.sha1(message,time,fatherCm.toString(),file2blobs.toString());
+        Map<Blob,String> map =fblo;
+        blobsf2ile.putAll(map);
+        map =fa.blobsf2ile;
+        for(Map.Entry<Blob,String> i:map.entrySet()){
+            if(!blobsf2ile.containsKey(i.getKey())){
+                blobsf2ile.put(i.getKey(),i.getValue());
+            }
+        }//compare with fa,save the blobs of far different with self
+        map =secfa.blobsf2ile;
+        for(Map.Entry<Blob,String> i:map.entrySet()){
+            if(!blobsf2ile.containsKey(i.getKey())){
+                blobsf2ile.put(i.getKey(),i.getValue());
+            }
+        }//compare with secfa,save the blobs of secfar different with self
+        id= Utils.sha1(message,time,fa.toString(),secfa.toString(),blobsf2ile.toString());
     }
     public void saveCommit(){
         File f=Utils.join(Repository.commits,this.id);

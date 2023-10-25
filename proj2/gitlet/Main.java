@@ -1,6 +1,7 @@
 package gitlet;
 
 import java.io.IOException;
+import java.text.ParseException;
 
 /** Driver class for Gitlet, a subset of the Git version-control system.
  *  @author TODO
@@ -10,7 +11,7 @@ public class Main {
     /** Usage: java gitlet.Main ARGS, where ARGS contains
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ParseException {
         // TODO: what if args is empty?
         if(args.length==0){
             System.out.println("Please enter a command.");
@@ -32,11 +33,8 @@ public class Main {
             }
             case "commit" -> {
                 if (args.length != 3) {
-                    System.out.println("Please enter a command.");
+                    System.out.println("Please enter a commit message.");
                     System.exit(0);
-                }
-                if (args[1] != "-m") {
-                    System.out.println("");
                 }
                 Repository.commitbuild(args[2]);
             }

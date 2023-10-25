@@ -9,9 +9,9 @@ import static gitlet.Utils.join;
 import static gitlet.Utils.writeObject;
 
 public class Temp implements Serializable{
-    public HashMap<String,Blob>blobs;
+    public HashMap<Blob, String>blobs=new HashMap<>();
 
-    public Temp(HashMap<String,Blob>B){
+    public Temp(HashMap<Blob, String>B){
         blobs=B;
     }
     public void saveTemp(){
