@@ -24,7 +24,7 @@ public class Commit implements Serializable{
      */
 
     /** The message of this Commit. */
-    private String message;
+    public String message;
     public String id;
     public Commit fa;
     public Commit secfa;
@@ -54,7 +54,11 @@ public class Commit implements Serializable{
                 blobsf2ile.put(i.getKey(),i.getValue());
             }
         }//compare with head,save the blobs of far different with self
-
+        Removal r=Utils.readObject(Repository.RemovalFile, Removal.class);
+        map =r.blobs;
+        for(Map.Entry<Blob,String> i:map.entrySet()){
+            blobsf2ile.remove(i.getKey());
+        }// removal delete
         id= Utils.sha1(message,time,fa.toString(),secfa.toString(),blobsf2ile.toString());
     }
     public Commit(Commit far,Commit secfar,HashMap fblo,String m){
@@ -80,6 +84,11 @@ public class Commit implements Serializable{
                 blobsf2ile.put(i.getKey(),i.getValue());
             }
         }//compare with secfa,save the blobs of secfar different with self
+        Removal r=Utils.readObject(Repository.RemovalFile, Removal.class);
+        map =r.blobs;
+        for(Map.Entry<Blob,String> i:map.entrySet()){
+            blobsf2ile.remove(i.getKey());
+        }// removal delete
         id= Utils.sha1(message,time,fa.toString(),secfa.toString(),blobsf2ile.toString());
     }
     public void saveCommit(){

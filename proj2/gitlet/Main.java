@@ -55,18 +55,21 @@ public class Main {
                     System.out.println("Please enter a command.");
                     System.exit(0);
                 }
+                Repository.global_log();
             }
             case "find" -> {
-                if (args.length != 3) {
+                if (args.length != 2) {
                     System.out.println("Please enter a command.");
                     System.exit(0);
                 }
+                Repository.find_mesg(args[1]);
             }
             case "status" -> {
                 if (args.length != 3) {
                     System.out.println("Please enter a command.");
                     System.exit(0);
                 }
+                Repository.printstatus();
             }
             case "checkout" -> {
                 if (args.length != 3) {

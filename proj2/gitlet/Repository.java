@@ -3,10 +3,13 @@ package gitlet;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import static gitlet.Utils.*;
 import static java.lang.System.exit;
+import static java.util.Collections.sort;
 
 // TODO: any imports you need here
 
@@ -114,37 +117,106 @@ public class Repository {
         File file = Utils.join(GITLET_DIR, filename);
         head=readObject(Head,Commit.class);
         Temp t=readObject(TempFile,Temp.class);
-        if(!t.blobs.containsValue(sha1(readContentsAsString(file)))
-                &&!head.file2blobs.containsValue(sha1(readContentsAsString(file)))){
+        if(!t.blobs.containsKey(sha1(readContentsAsString(file)))
+                &&!head.blobsf2ile.containsKey(sha1(readContentsAsString(file)))){
             System.out.println("No reason to remove the file.");
         }
-        if(t.blobs.containsValue(sha1(readContentsAsString(file)))){
-            t.blobs.remove(filename);
+        else if(t.blobs.containsKey(sha1(readContentsAsString(file)))
+                &&!head.blobsf2ile.containsKey(sha1(readContentsAsString(file)))){
+            t.blobs.remove(sha1(readContentsAsString(file)));
+            t.saveTemp();
         }
-        if(head.file2blobs.containsValue(sha1(readContentsAsString(file)))){
-            head.file2blobs.remove()
+        else if(!t.blobs.containsKey(sha1(readContentsAsString(file)))
+                &&head.blobsf2ile.containsKey(sha1(readContentsAsString(file)))){
+            Removal r=readObject(RemovalFile,Removal.class);
+            r.blobs.put(new Blob(sha1(readContentsAsString(file))),filename);
+            r.RemovalSave();
         }
-
-        file.delete();
-
-
-
-
+        else{
+            t.blobs.remove(sha1(readContentsAsString(file)));
+            t.saveTemp();
+            Removal r=readObject(RemovalFile,Removal.class);
+            r.blobs.put(new Blob(sha1(readContentsAsString(file))),filename);
+            r.RemovalSave();
+        }
     }
 
     public static void logcommits() {
         Commit p = head;
-        if (p.secfa != null) {
-            System.out.println("===\n" +
-                    "commit" + " " + p.id + "\n" +
-                    "Merge: " + p.fa.id.substring(0, 7) + " " + p.secfa.id.substring(0, 7) + "\n" + p.time + "\n" +
-                    "Merged development into master.");
-        } else {
-            System.out.println("===\n" +
-                    "commit" + " " + p.id + "\n" +
-                    p.time + "\n" +
-                    "Merged development into master.");
+        do {
+            if (p.secfa != null) {
+                System.out.println("===\n" +
+                        "commit" + " " + p.id + "\n" +
+                        "Merge: " + p.fa.id.substring(0, 7) + " " + p.secfa.id.substring(0, 7) + "\n" +"Date: "+p.time + "\n" +
+                        "Merged development into master.");
+            } else {
+                System.out.println("===\n" +
+                        "commit" + " " + p.id + "\n" +"Date: "+
+                        p.time + "\n" +p.message);
+            }
+        }while(p.fa!=null);
+    }
+
+    public static void global_log() {
+        List<String> coms=Utils.plainFilenamesIn(commits);
+        for(String s:coms){
+            Commit c=readObject(join(commits,s), Commit.class);
+            System.out.println(c.message);
         }
+    }
+
+    public static void find_mesg(String mes) {
+        List<String> coms=Utils.plainFilenamesIn(commits);
+        for(String s:coms){
+            Commit c=readObject(join(commits,s), Commit.class);
+            if(c.message==mes){
+                System.out.println(c.id);
+            }
+            System.out.println(c.message);
+        }
+    }
+
+    public static void printstatus() {
+        System.out.println("=== Branches ===");
+        List<String>br=plainFilenamesIn(heads);
+        sort(br);
+        for(int i=0;i<br.size();++i){
+            if(readObject(join(heads,br.get(i)),Commit.class)==head){
+                System.out.println("*"+br.get(i));
+            }
+            else{
+                System.out.println(br.get(i));
+            }
+        }
+        System.out.println();
+
+        System.out.println("=== Staged Files ===");
+        Temp t=readObject(TempFile,Temp.class);
+        List<String>l=(List<String>)t.blobs.values();
+        sort(l);
+        for (String string : l) {
+            System.out.println(string);
+        }
+        System.out.println();
+
+        System.out.println("=== Removed Files ===");
+        Removal r=readObject(RemovalFile, Removal.class);
+        List<String>rl=(List<String>)r.blobs.values();
+        sort(rl);
+        for(String s:rl){
+            System.out.println(s);
+        }
+        System.out.println();
+
+        System.out.println("=== Modifications Not Staged For Commit ===");
+
+        System.out.println();
+
+        System.out.println("=== Untracked Files ===");
+        Removal r=readObject(RemovalFile, Removal.class);
+        List<String>files=plainFilenamesIn(CWD);
+        if()
+
     }
 }
 
