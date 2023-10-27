@@ -46,7 +46,7 @@ public class Repository {
     public static Commit head;
     public final static File TempFile = join(Repository.GITLET_DIR, "Temp");
     public final static File RemovalFile = join(Repository.GITLET_DIR, "Removal");
-    public static HashMap<Blob, String> B;//temparary blobs
+    public static HashMap<String,Blob> B;//temparary blobs
     public static Commit InitCommit;//init commit
 
     /* TODO: fill in the rest of this class. */
@@ -62,99 +62,93 @@ public class Repository {
         blobs.mkdirs();
         refs.mkdirs();
         heads.mkdirs();
-        Temp T = new Temp(B);
-        //make directory
-        Utils.writeObject(TempFile, T);
-        InitCommit = new Commit("initcommit");
+        writeObject(RemovalFile,new Removal(new HashMap<>()));
+
+        InitCommit = new Commit("init commit");
         File master = join(heads, "master");
         Utils.writeObject(Head, InitCommit);
         Utils.writeObject(master, InitCommit);
 
     }
 
-    public static Commit commitbuild(String m) {
+    public static void commitbuild(String m) {
 
         head = Utils.readObject(Head, Commit.class);
         B = readObject(TempFile, Temp.class).blobs;//read temprepo
-        if(B.size()==0){
+        if (B.size() == 0) {
             System.out.print("No changes added to the commit.");
-            return null;
         }
-        Commit c = new Commit(head, B, m);
+
+        Commit c = new Commit(head, m);
         head = c;
-        Utils.writeObject(Head, head);//save head
+        writeObject(Head, head);//save head
         B.clear();//temprepo clear
         Temp t = new Temp(B);
         t.saveTemp();//save temprepo
         c.saveCommit();
-        return c;
-    }
 
+    }
     public static void addBlobs(String filename) {
         File file = Utils.join(CWD, filename);
         if (!file.exists()) {
             System.out.println("File does not exist.");
             exit(0);
         }
+        if(TempFile.exists()==false)writeObject(TempFile,B);
         B = readObject(TempFile, Temp.class).blobs;//read temprepo
-        if(B.containsKey(filename))B.put(new Blob(filename),filename);//same name replace
-
-        if (B.containsKey(Utils.sha1(Utils.readObject(file, String.class)))){
+        if(B!=null){
+            if (B.containsValue(Utils.sha1(Utils.readContentsAsString(file)))){
+                Temp t = new Temp(B);
+                t.saveTemp();//save temprepo
                 return;
-        }//temprepo have no this file
+            }//temprepo have no this file
+        }
 
         head = readObject(Head, Commit.class);
-        if (head.blobsf2ile.containsKey(Utils.sha1(Utils.readObject(file, String.class)))){
-            return;
-        }//headcommit have no this file
-
-        B.put(new Blob(filename), filename);
+        if(head.file2blobs!=null){
+            if (head.file2blobs.containsValue(Utils.sha1(Utils.readContentsAsString(file)))){
+                writeObject(Head,head);//save temprepo
+                return;
+            }//headcommit have no this file
+        }
+        if(B==null)B=new HashMap<>();
+        B.put(filename,new Blob(filename));
         Temp t = new Temp(B);
         t.saveTemp();//save temprepo
+        writeObject(Head,head);
     }
 
     public static void rmfiles(String filename) {
-        File file = Utils.join(GITLET_DIR, filename);
+        File file = join(GITLET_DIR, filename);
         head=readObject(Head,Commit.class);
         Temp t=readObject(TempFile,Temp.class);
-        if(!t.blobs.containsKey(sha1(readContentsAsString(file)))
-                &&!head.blobsf2ile.containsKey(sha1(readContentsAsString(file)))){
-            System.out.println("No reason to remove the file.");
-        }
-        else if(t.blobs.containsKey(sha1(readContentsAsString(file)))
-                &&!head.blobsf2ile.containsKey(sha1(readContentsAsString(file)))){
-            t.blobs.remove(sha1(readContentsAsString(file)));
+        if(t.blobs.containsKey(filename)){
+            t.blobs.remove(filename);
             t.saveTemp();
         }
-        else if(!t.blobs.containsKey(sha1(readContentsAsString(file)))
-                &&head.blobsf2ile.containsKey(sha1(readContentsAsString(file)))){
-            Removal r=readObject(RemovalFile,Removal.class);
-            r.blobs.put(new Blob(sha1(readContentsAsString(file))),filename);
-            r.RemovalSave();
+        if(head.file2blobs.containsKey(filename)){
+            Removal r=readObject(RemovalFile, Removal.class);
+            r.blobs.put(filename,new Blob(filename));
         }
-        else{
-            t.blobs.remove(sha1(readContentsAsString(file)));
-            t.saveTemp();
-            Removal r=readObject(RemovalFile,Removal.class);
-            r.blobs.put(new Blob(sha1(readContentsAsString(file))),filename);
-            r.RemovalSave();
-        }
+        file.delete();
     }
 
     public static void logcommits() {
+        head=readObject(Head,Commit.class);
         Commit p = head;
         do {
             if (p.secfa != null) {
                 System.out.println("===\n" +
                         "commit" + " " + p.id + "\n" +
                         "Merge: " + p.fa.id.substring(0, 7) + " " + p.secfa.id.substring(0, 7) + "\n" +"Date: "+p.time + "\n" +
-                        "Merged development into master.");
+                        "Merged development into master."+"\n");
             } else {
                 System.out.println("===\n" +
                         "commit" + " " + p.id + "\n" +"Date: "+
-                        p.time + "\n" +p.message);
+                        p.time + "\n" +p.message+"\n");
             }
-        }while(p.fa!=null);
+            p=p.fa;
+        }while(p!=null);
     }
 
     public static void global_log() {
@@ -172,11 +166,11 @@ public class Repository {
             if(c.message==mes){
                 System.out.println(c.id);
             }
-            System.out.println(c.message);
         }
     }
 
     public static void printstatus() {
+        /*
         System.out.println("=== Branches ===");
         List<String>br=plainFilenamesIn(heads);
         sort(br);
@@ -215,8 +209,8 @@ public class Repository {
         System.out.println("=== Untracked Files ===");
         Removal r=readObject(RemovalFile, Removal.class);
         List<String>files=plainFilenamesIn(CWD);
-        if()
 
+*/
     }
 }
 

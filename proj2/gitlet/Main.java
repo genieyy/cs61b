@@ -32,11 +32,11 @@ public class Main {
                 }
             }
             case "commit" -> {
-                if (args.length != 3) {
+                if (args.length != 2) {
                     System.out.println("Please enter a commit message.");
                     System.exit(0);
                 }
-                Repository.commitbuild(args[2]);
+                Repository.commitbuild(args[1]);
             }
             case "rm" -> {
                 for (int i = 1; i < args.length; ++i) {
@@ -44,17 +44,11 @@ public class Main {
                 }
             }
             case "log" -> {
-                if (args.length != 3) {
-                    System.out.println("Please enter a command.");
-                    System.exit(0);
-                }
+
                 Repository.logcommits();
             }
             case "global-log" -> {
-                if (args.length != 3) {
-                    System.out.println("Please enter a command.");
-                    System.exit(0);
-                }
+
                 Repository.global_log();
             }
             case "find" -> {
@@ -65,41 +59,23 @@ public class Main {
                 Repository.find_mesg(args[1]);
             }
             case "status" -> {
-                if (args.length != 3) {
-                    System.out.println("Please enter a command.");
-                    System.exit(0);
-                }
+
                 Repository.printstatus();
             }
             case "checkout" -> {
-                if (args.length != 3) {
-                    System.out.println("Please enter a command.");
-                    System.exit(0);
-                }
+
             }
             case "branch" -> {
-                if (args.length != 3) {
-                    System.out.println("Please enter a command.");
-                    System.exit(0);
-                }
+
             }
             case "rm-branch" -> {
-                if (args.length != 3) {
-                    System.out.println("Please enter a command.");
-                    System.exit(0);
-                }
+
             }
             case "reset" -> {
-                if (args.length != 3) {
-                    System.out.println("Please enter a command.");
-                    System.exit(0);
-                }
+
             }
             case "merge" -> {
-                if (args.length != 3) {
-                    System.out.println("Please enter a command.");
-                    System.exit(0);
-                }
+
             }
             default -> {
                 System.out.println("No command with that name exists.");

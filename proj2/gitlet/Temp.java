@@ -9,12 +9,12 @@ import static gitlet.Utils.join;
 import static gitlet.Utils.writeObject;
 
 public class Temp implements Serializable{
-    public HashMap<Blob, String>blobs=new HashMap<>();
+    public HashMap<String,Blob>blobs=new HashMap<>();
 
-    public Temp(HashMap<Blob, String>B){
+    public Temp(HashMap<String,Blob>B){
         blobs=B;
     }
-    public void saveTemp(){
+    public void  saveTemp(){
         writeObject(Repository.TempFile, this);
     }
 }

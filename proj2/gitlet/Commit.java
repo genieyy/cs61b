@@ -8,6 +8,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static gitlet.Utils.readObject;
+import static gitlet.Utils.writeObject;
+
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
@@ -29,7 +32,7 @@ public class Commit implements Serializable{
     public Commit fa;
     public Commit secfa;
     public String time;
-    public HashMap<Blob,String> blobsf2ile=new HashMap<>();
+    public HashMap<String,Blob> file2blobs=new HashMap<>();
 
 
     /* TODO: fill in the rest of this class. */
@@ -41,55 +44,74 @@ public class Commit implements Serializable{
         SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
         time= formatter.format(epochTime);
     }
-    public Commit(Commit far,HashMap fblo,String m){
+    public Commit(Commit far,String m){
         message=m;
         SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
         time= formatter.format(new Date(System.currentTimeMillis()));
         fa=far;
-        Map<Blob,String> map =fblo;
-        blobsf2ile.putAll(map);
-        map =fa.blobsf2ile;
-        for(Map.Entry<Blob,String> i:map.entrySet()){
-            if(!blobsf2ile.containsKey(i.getKey())){
-                blobsf2ile.put(i.getKey(),i.getValue());
+        HashMap<String,Blob>fblo=readObject(Repository.TempFile,Temp.class).blobs;
+        Map<String,Blob> map =fblo;
+        file2blobs.putAll(map);
+        fblo.clear();
+        Temp t=new Temp(fblo);
+        writeObject(Repository.TempFile,t);
+
+        map =fa.file2blobs;
+        for(Map.Entry<String,Blob> i:map.entrySet()){
+            if(!file2blobs.containsKey(i.getKey())){
+                file2blobs.put(i.getKey(),i.getValue());
             }
         }//compare with head,save the blobs of far different with self
-        Removal r=Utils.readObject(Repository.RemovalFile, Removal.class);
-        map =r.blobs;
-        for(Map.Entry<Blob,String> i:map.entrySet()){
-            blobsf2ile.remove(i.getKey());
-        }// removal delete
-        id= Utils.sha1(message,time,fa.toString(),secfa.toString(),blobsf2ile.toString());
+
+
+        Removal r= readObject(Repository.RemovalFile, Removal.class);
+        if(r!=null){
+            map =r.blobs;
+            for(Map.Entry<String,Blob> i:map.entrySet()){
+                file2blobs.remove(i.getKey());
+            }// removal delete
+        }
+        if(r==null)r=new Removal(new HashMap<>());
+        writeObject(Repository.RemovalFile, r);
+
+        id= Utils.sha1(message,time,fa.toString(),file2blobs.toString());
     }
-    public Commit(Commit far,Commit secfar,HashMap fblo,String m){
+    public Commit(Commit far,Commit secfar,String m){
         message=m;
         SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
         time= formatter.format(new Date(System.currentTimeMillis()));
-
         fa=far;
-        secfa=secfar;
-        //id final consider
+        HashMap<String,Blob>fblo=readObject(Repository.TempFile,Temp.class).blobs;
+        Map<String,Blob> map =fblo;
+        file2blobs.putAll(map);
+        fblo.clear();
+        Temp t=new Temp(fblo);
+        writeObject(Repository.TempFile,t);
 
-        Map<Blob,String> map =fblo;
-        blobsf2ile.putAll(map);
-        map =fa.blobsf2ile;
-        for(Map.Entry<Blob,String> i:map.entrySet()){
-            if(!blobsf2ile.containsKey(i.getKey())){
-                blobsf2ile.put(i.getKey(),i.getValue());
+        map =fa.file2blobs;
+        for(Map.Entry<String,Blob> i:map.entrySet()){
+            if(!file2blobs.containsKey(i.getKey())){
+                file2blobs.put(i.getKey(),i.getValue());
             }
-        }//compare with fa,save the blobs of far different with self
-        map =secfa.blobsf2ile;
-        for(Map.Entry<Blob,String> i:map.entrySet()){
-            if(!blobsf2ile.containsKey(i.getKey())){
-                blobsf2ile.put(i.getKey(),i.getValue());
+        }//compare with head,save the blobs of far different with self
+        map =secfa.file2blobs;
+        for(Map.Entry<String,Blob> i:map.entrySet()){
+            if(!file2blobs.containsKey(i.getKey())){
+                file2blobs.put(i.getKey(),i.getValue());
             }
-        }//compare with secfa,save the blobs of secfar different with self
-        Removal r=Utils.readObject(Repository.RemovalFile, Removal.class);
-        map =r.blobs;
-        for(Map.Entry<Blob,String> i:map.entrySet()){
-            blobsf2ile.remove(i.getKey());
-        }// removal delete
-        id= Utils.sha1(message,time,fa.toString(),secfa.toString(),blobsf2ile.toString());
+        }//compare with head,save the blobs of far different with self
+
+        Removal r= readObject(Repository.RemovalFile, Removal.class);
+        if(r!=null){
+            map =r.blobs;
+            for(Map.Entry<String,Blob> i:map.entrySet()){
+                file2blobs.remove(i.getKey());
+            }// removal delete
+        }
+        if(r==null)r=new Removal(new HashMap<>());
+        writeObject(Repository.RemovalFile, r);
+
+        id= Utils.sha1(message,time,fa.toString(),secfa.toString(),file2blobs.toString());
     }
     public void saveCommit(){
         File f=Utils.join(Repository.commits,this.id);
