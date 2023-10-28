@@ -43,11 +43,13 @@ public class Repository {
     public static final File refs = Utils.join(GITLET_DIR, "refs");//heads->master
     public static final File heads = Utils.join(refs, "heads");//master,other
     public static File Head = Utils.join(GITLET_DIR, "Head");//recent commit
+    public static File CurBranch=Utils.join(GITLET_DIR,"CurBranch");
     public static Commit head;
     public final static File TempFile = join(Repository.GITLET_DIR, "Temp");
     public final static File RemovalFile = join(Repository.GITLET_DIR, "Removal");
     public static HashMap<String,Blob> B;//temparary blobs
     public static Commit InitCommit;//init commit
+    public static File master = join(heads, "master");
 
     /* TODO: fill in the rest of this class. */
     public static void setup() throws IOException, ParseException {
@@ -63,9 +65,10 @@ public class Repository {
         refs.mkdirs();
         heads.mkdirs();
         writeObject(RemovalFile,new Removal(new HashMap<>()));
-
+        writeObject(TempFile,new Temp(new HashMap<>()));
         InitCommit = new Commit("init commit");
-        File master = join(heads, "master");
+        InitCommit.saveCommit();
+        writeObject(CurBranch,"master");
         Utils.writeObject(Head, InitCommit);
         Utils.writeObject(master, InitCommit);
 
@@ -75,13 +78,15 @@ public class Repository {
 
         head = Utils.readObject(Head, Commit.class);
         B = readObject(TempFile, Temp.class).blobs;//read temprepo
-        if (B.size() == 0) {
+        Removal r=readObject(RemovalFile,Removal.class);
+        if (B.size() == 0&&r.blobs.size()==0) {
             System.out.print("No changes added to the commit.");
         }
 
         Commit c = new Commit(head, m);
         head = c;
         writeObject(Head, head);//save head
+        writeObject(master,head);
         B.clear();//temprepo clear
         Temp t = new Temp(B);
         t.saveTemp();//save temprepo
@@ -112,14 +117,16 @@ public class Repository {
             }//headcommit have no this file
         }
         if(B==null)B=new HashMap<>();
-        B.put(filename,new Blob(filename));
+        Blob b=new Blob(filename);
+        b.saveBlob();
+        B.put(filename,b);
         Temp t = new Temp(B);
         t.saveTemp();//save temprepo
         writeObject(Head,head);
     }
 
     public static void rmfiles(String filename) {
-        File file = join(GITLET_DIR, filename);
+        File file = join(CWD, filename);
         head=readObject(Head,Commit.class);
         Temp t=readObject(TempFile,Temp.class);
         if(t.blobs.containsKey(filename)){
@@ -129,8 +136,13 @@ public class Repository {
         if(head.file2blobs.containsKey(filename)){
             Removal r=readObject(RemovalFile, Removal.class);
             r.blobs.put(filename,new Blob(filename));
+            r.saveRemoval();
+            file.delete();
         }
-        file.delete();
+        if(!t.blobs.containsKey(filename)&&!head.file2blobs.containsKey(filename)){
+            System.out.println("No reason to remove the file.");
+        }
+
     }
 
     public static void logcommits() {
@@ -171,15 +183,18 @@ public class Repository {
     }
 
     public static void printstatus() {
-        /*
         System.out.println("=== Branches ===");
         List<String>br=plainFilenamesIn(heads);
+        head=readObject(Head,Commit.class);
         sort(br);
         for(int i=0;i<br.size();++i){
-            if(readObject(join(heads,br.get(i)),Commit.class)==head){
+            if(readObject(CurBranch,String.class).equals(br.get(i))){
                 System.out.println("*"+br.get(i));
             }
             else{
+                System.out.println(readObject(join(heads,br.get(i)),Commit.class));
+                System.out.println(head);
+                System.out.println(head.equals(readObject(join(heads,br.get(i)),Commit.class)));
                 System.out.println(br.get(i));
             }
         }
@@ -187,18 +202,15 @@ public class Repository {
 
         System.out.println("=== Staged Files ===");
         Temp t=readObject(TempFile,Temp.class);
-        List<String>l=(List<String>)t.blobs.values();
-        sort(l);
-        for (String string : l) {
+
+        for (String string : t.blobs.keySet()) {
             System.out.println(string);
         }
         System.out.println();
 
         System.out.println("=== Removed Files ===");
         Removal r=readObject(RemovalFile, Removal.class);
-        List<String>rl=(List<String>)r.blobs.values();
-        sort(rl);
-        for(String s:rl){
+        for(String s:r.blobs.keySet()){
             System.out.println(s);
         }
         System.out.println();
@@ -208,10 +220,28 @@ public class Repository {
         System.out.println();
 
         System.out.println("=== Untracked Files ===");
-        Removal r=readObject(RemovalFile, Removal.class);
-        List<String>files=plainFilenamesIn(CWD);
+        System.out.println();
 
-*/
+
+    }
+
+    public static void checkoutheadfile(String filename) {
+        head=readObject(Head, Commit.class);
+        File file=join(CWD,filename);
+        if(head.file2blobs.containsKey(filename)){
+            writeContents(file,head.file2blobs.get(filename));
+        }
+        else{
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+    }
+
+
+    public static void checkoutcommitfile() {
+    }
+
+    public static void checkoutbranchfile() {
     }
 }
 

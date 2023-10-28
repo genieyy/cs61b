@@ -10,7 +10,7 @@ public class Removal implements Serializable {
     public Removal(HashMap<String,Blob>B){
         blobs=new HashMap<>(B);
     }
-    public void RemovalSave(){
+    public void saveRemoval(){
         writeObject(Repository.RemovalFile,this);
     }
 

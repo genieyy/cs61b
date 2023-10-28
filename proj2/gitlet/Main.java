@@ -59,11 +59,12 @@ public class Main {
                 Repository.find_mesg(args[1]);
             }
             case "status" -> {
-
                 Repository.printstatus();
             }
             case "checkout" -> {
-
+                if(args.length==3) Repository.checkoutheadfile(args[2]);
+                if(args.length==4) Repository.checkoutcommitfile();
+                if(args.length==2) Repository.checkoutbranchfile();
             }
             case "branch" -> {
 
