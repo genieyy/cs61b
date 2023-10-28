@@ -148,6 +148,7 @@ public class Repository {
                         p.time + "\n" +p.message+"\n");
             }
             p=p.fa;
+
         }while(p!=null);
     }
 
@@ -163,7 +164,7 @@ public class Repository {
         List<String> coms=Utils.plainFilenamesIn(commits);
         for(String s:coms){
             Commit c=readObject(join(commits,s), Commit.class);
-            if(c.message==mes){
+            if(c.message.equals(mes)){
                 System.out.println(c.id);
             }
         }

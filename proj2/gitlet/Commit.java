@@ -36,17 +36,21 @@ public class Commit implements Serializable{
 
 
     /* TODO: fill in the rest of this class. */
+    public Commit(){}
+
     public Commit(String m) throws ParseException {
         message=m;
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         Date epochTime = dateFormat.parse("1970-01-01 00:00:00");
-        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
         time= formatter.format(epochTime);
+
+        id= Utils.sha1(message,time,file2blobs.toString());
     }
     public Commit(Commit far,String m){
         message=m;
-        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
         time= formatter.format(new Date(System.currentTimeMillis()));
         fa=far;
         HashMap<String,Blob>fblo=readObject(Repository.TempFile,Temp.class).blobs;
@@ -78,7 +82,7 @@ public class Commit implements Serializable{
     }
     public Commit(Commit far,Commit secfar,String m){
         message=m;
-        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
         time= formatter.format(new Date(System.currentTimeMillis()));
         fa=far;
         HashMap<String,Blob>fblo=readObject(Repository.TempFile,Temp.class).blobs;
