@@ -74,6 +74,8 @@ public class Commit implements Serializable{
             for(Map.Entry<String,Blob> i:map.entrySet()){
                 file2blobs.remove(i.getKey());
             }// removal delete
+            r.blobs.clear();
+            writeObject(Repository.RemovalFile,r);
         }
         if(r==null)r=new Removal(new HashMap<>());
         writeObject(Repository.RemovalFile, r);

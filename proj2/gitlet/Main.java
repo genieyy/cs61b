@@ -63,20 +63,20 @@ public class Main {
             }
             case "checkout" -> {
                 if(args.length==3) Repository.checkoutheadfile(args[2]);
-                if(args.length==4) Repository.checkoutcommitfile();
-                if(args.length==2) Repository.checkoutbranchfile();
+                if(args.length==4) Repository.checkoutcommitfile(args[1],args[3]);
+                if(args.length==2) Repository.checkoutbranchfile(args[1]);
             }
             case "branch" -> {
-
+                Repository.create_branch(args[1]);
             }
             case "rm-branch" -> {
-
+                Repository.rm_branch(args[1]);
             }
             case "reset" -> {
-
+                Repository.reset(args[1]);
             }
             case "merge" -> {
-
+                Repository.Merge(args[1]);
             }
             default -> {
                 System.out.println("No command with that name exists.");

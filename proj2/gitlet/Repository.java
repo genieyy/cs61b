@@ -36,6 +36,7 @@ public class Repository {
     /**
      * The .gitlet directory.
      */
+    public static final File WORK_DIR = join(CWD, "work");
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     public static final File objects = join(GITLET_DIR, "objects");
     public static final File commits = join(objects, "commits");
@@ -44,6 +45,7 @@ public class Repository {
     public static final File heads = Utils.join(refs, "heads");//master,other
     public static File Head = Utils.join(GITLET_DIR, "Head");//recent commit
     public static File CurBranch=Utils.join(GITLET_DIR,"CurBranch");
+    public static String cur;
     public static Commit head;
     public final static File TempFile = join(Repository.GITLET_DIR, "Temp");
     public final static File RemovalFile = join(Repository.GITLET_DIR, "Removal");
@@ -71,6 +73,7 @@ public class Repository {
         writeObject(CurBranch,"master");
         Utils.writeObject(Head, InitCommit);
         Utils.writeObject(master, InitCommit);
+        cur="master";
 
     }
 
@@ -86,7 +89,7 @@ public class Repository {
         Commit c = new Commit(head, m);
         head = c;
         writeObject(Head, head);//save head
-        writeObject(master,head);
+        writeObject(join(heads,cur),head);//save branch head
         B.clear();//temprepo clear
         Temp t = new Temp(B);
         t.saveTemp();//save temprepo
@@ -94,7 +97,7 @@ public class Repository {
 
     }
     public static void addBlobs(String filename) {
-        File file = Utils.join(CWD, filename);
+        File file = Utils.join(WORK_DIR, filename);
         if (!file.exists()) {
             System.out.println("File does not exist.");
             exit(0);
@@ -113,6 +116,7 @@ public class Repository {
         if(head.file2blobs!=null){
             if (head.file2blobs.containsValue(Utils.sha1(Utils.readContentsAsString(file)))){
                 writeObject(Head,head);//save temprepo
+                writeObject(join(heads,cur),head);
                 return;
             }//headcommit have no this file
         }
@@ -123,25 +127,30 @@ public class Repository {
         Temp t = new Temp(B);
         t.saveTemp();//save temprepo
         writeObject(Head,head);
+        writeObject(join(heads,cur),head);
     }
 
     public static void rmfiles(String filename) {
-        File file = join(CWD, filename);
+        File file = join(WORK_DIR, filename);
         head=readObject(Head,Commit.class);
         Temp t=readObject(TempFile,Temp.class);
         if(t.blobs.containsKey(filename)){
+            File f=join(blobs,t.blobs.get(filename).id);
+            f.delete();
             t.blobs.remove(filename);
             t.saveTemp();
         }
         if(head.file2blobs.containsKey(filename)){
+            File f=join(blobs,head.file2blobs.get(filename).id);
+            f.delete();
             Removal r=readObject(RemovalFile, Removal.class);
             r.blobs.put(filename,new Blob(filename));
             r.saveRemoval();
-            file.delete();
         }
         if(!t.blobs.containsKey(filename)&&!head.file2blobs.containsKey(filename)){
             System.out.println("No reason to remove the file.");
         }
+
 
     }
 
@@ -227,9 +236,9 @@ public class Repository {
 
     public static void checkoutheadfile(String filename) {
         head=readObject(Head, Commit.class);
-        File file=join(CWD,filename);
+        File file=join(WORK_DIR,filename);
         if(head.file2blobs.containsKey(filename)){
-            writeContents(file,head.file2blobs.get(filename));
+            writeContents(file,head.file2blobs.get(filename).content);
         }
         else{
             System.out.println("File does not exist in that commit.");
@@ -238,10 +247,205 @@ public class Repository {
     }
 
 
-    public static void checkoutcommitfile() {
+    public static void checkoutcommitfile(String id,String filename) {
+        File f=join(commits,id);
+        if(!f.exists()){
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+        Commit c=readObject(join(commits,id), Commit.class);
+        if(!c.file2blobs.containsKey(filename)){
+            System.out.println("File does not exist in that commit.");
+            return;
+        }
+        writeObject(join(WORK_DIR,filename),c.file2blobs.get(filename).content);
     }
 
-    public static void checkoutbranchfile() {
+    public static void checkoutbranchfile(String branch) {
+        File f=join(heads,branch);
+        if(!f.exists()){
+            System.out.println("No such branch exists.");
+            return;
+        }
+
+        cur=readObject(CurBranch, String.class);
+        if(branch.equals(cur)){
+            System.out.println("No need to checkout the current branch.");
+            return;
+        }
+
+        Commit c=readObject(f, Commit.class);
+        head=readObject(Head, Commit.class);
+
+        List<String> otfiles=Utils.plainFilenamesIn(WORK_DIR);
+        for (String s:otfiles) {
+            if(c.file2blobs.containsKey(s)&&head.file2blobs.containsKey(s)) {
+                System.out.println("There is an untracked file in the way; " +
+                        "delete it, or add and commit it first.");
+                return;
+            }
+        }//unchecked files
+
+        for(String s:c.file2blobs.keySet()){
+            writeObject(join(WORK_DIR,s),c.file2blobs.get(s).content);
+        }//write files of the branch head
+
+        Temp t=readObject(TempFile,Temp.class);
+        t.blobs.clear();
+        t.saveTemp();//clear temp
+
+        Removal r=readObject(RemovalFile, Removal.class);
+        r.blobs.clear();
+        r.saveRemoval();//clear removal
+
+        head=c;
+        writeObject(Head,head);//save head
+    }
+
+    public static void create_branch(String branch) {
+        File f=join(heads,branch);
+        if(f.exists()){
+            System.out.println("A branch with that name already exists.");
+            return;
+        }
+        head=readObject(Head, Commit.class);
+        writeObject(f,head);
+    }
+
+    public static void rm_branch(String branch) {
+        List<String> bs=Utils.plainFilenamesIn(heads);
+        if(!bs.contains(branch)){
+            System.out.println("A branch with that name does not exist.");
+            return;
+        }
+        cur=readObject(CurBranch, String.class);
+        if(branch.equals(cur)){
+            System.out.println("Cannot remove the current branch.");
+            return;
+        }
+        File f=join(heads,branch);
+        f.delete();
+    }
+
+    public static void reset(String commitid) {
+        List<String> cs=Utils.plainFilenamesIn(commits);
+        if(!cs.contains(commitid)){
+            System.out.println("No commit with that id exists.");
+            return;
+        }
+
+        Commit c=readObject(join(commits,commitid), Commit.class);
+        head=readObject(Head, Commit.class);
+        List<String> otfiles=Utils.plainFilenamesIn(WORK_DIR);
+
+        for (String s:otfiles) {
+            if(c.file2blobs.containsKey(s)&&!head.file2blobs.containsKey(s)) {
+                System.out.println("There is an untracked file in the way; " +
+                        "delete it, or add and commit it first.");
+                return;
+            }
+        }//unchecked files
+
+        Temp t=readObject(TempFile,Temp.class);
+        t.blobs.clear();
+        t.saveTemp();//clear temp
+
+        Removal r=readObject(RemovalFile, Removal.class);
+        r.blobs.clear();
+        r.saveRemoval();//clear removal
+
+        head=c;
+        writeObject(Head,head);
+        cur=readObject(CurBranch,String.class);
+        writeObject(join(heads,cur),head);//renew head to this commit
+    }
+
+    public static void Merge(String branch) {
+        head=readObject(Head, Commit.class);
+        Commit c=readObject(join(heads,branch), Commit.class);
+        Commit p=head;
+        int brcount=0,curcount=0;
+        while(p!=null){
+            if(p.equals(c)){
+                System.out.println("Given branch is an ancestor of the current branch.");
+                return;
+            }
+            curcount++;
+            p=p.fa;
+        }
+        Commit q=c;
+        while(q!=null){
+            if(q.equals(head)){
+                checkoutbranchfile(branch);
+                System.out.println("Current branch fast-forwarded.");
+                return;
+            }
+            brcount++;
+            q=q.fa;
+        }
+
+        p=head;q=c;
+        if(curcount>brcount){
+            for(int i=0;i<curcount-brcount;i++){
+                p=p.fa;
+            }
+        }
+        else if(curcount<brcount){
+            for(int i=0;i<brcount-curcount;i++){
+                q=q.fa;
+            }
+        }
+
+        while(!p.fa.equals(c.fa)){
+            p=p.fa;
+            q=q.fa;
+        }
+
+        Commit sa=p.fa;//first same ancestor,p,q are its children
+        for(String s:sa.file2blobs.keySet()){
+            if(c.file2blobs.containsKey(s)&&head.file2blobs.containsKey(s)){
+                if(c.file2blobs.get(s).equals(sa.file2blobs.get(s))&&
+                        !head.file2blobs.get(s).equals(sa.file2blobs.get(s))){
+                    //keep unchanged
+
+                }
+                else if(!c.file2blobs.get(s).equals(sa.file2blobs.get(s))&&
+                        head.file2blobs.get(s).equals(sa.file2blobs.get(s))){
+                    checkoutcommitfile(c.id,s);
+                    addBlobs(s);
+                }
+                else if(!c.file2blobs.get(s).equals(sa.file2blobs.get(s))&&
+                        !head.file2blobs.get(s).equals(sa.file2blobs.get(s))){
+                    if(!c.file2blobs.get(s).equals(head.file2blobs.get(s))){
+                        System.out.print("Encountered a merge conflict.");
+                    }
+                }
+            }
+            if(!c.file2blobs.containsKey(s)&&head.file2blobs.containsKey(s)){
+                if(head.file2blobs.get(s).equals(sa.file2blobs.get(s))){
+                    rmfiles(s);
+                }
+            }
+            if(c.file2blobs.containsKey(s)&&!head.file2blobs.containsKey(s)){
+                if(c.file2blobs.get(s).equals(sa.file2blobs.get(s))){
+                    //remain absent
+                }
+
+        }
+
+        for(String s:c.file2blobs.keySet()){
+            if(!sa.file2blobs.containsKey(s)){
+                if(!head.file2blobs.containsKey(s)){
+                    checkoutcommitfile(c.id,s);
+                    addBlobs(s);
+                }
+                else{
+                    System.out.print("Encountered a merge conflict.");
+                }
+            }
+        }
+
+
     }
 }
 
