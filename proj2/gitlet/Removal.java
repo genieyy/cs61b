@@ -6,8 +6,8 @@ import java.util.HashMap;
 import static gitlet.Utils.writeObject;
 
 public class Removal implements Serializable {
-    public HashMap<String,Blob>blobs;
-    public Removal(HashMap<String,Blob>B){
+    public HashMap<String,String>blobs;
+    public Removal(HashMap<String,String>B){
         blobs=new HashMap<>(B);
     }
     public void saveRemoval(){

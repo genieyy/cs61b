@@ -32,7 +32,7 @@ public class Commit implements Serializable{
     public Commit fa;
     public Commit secfa;
     public String time;
-    public HashMap<String,Blob> file2blobs=new HashMap<>();
+    public HashMap<String,String> file2blobs=new HashMap<>();
 
 
     /* TODO: fill in the rest of this class. */
@@ -53,15 +53,15 @@ public class Commit implements Serializable{
         SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
         time= formatter.format(new Date(System.currentTimeMillis()));
         fa=far;
-        HashMap<String,Blob>fblo=readObject(Repository.TempFile,Temp.class).blobs;
-        Map<String,Blob> map =fblo;
+        HashMap<String,String>fblo=readObject(Repository.TempFile,Temp.class).blobs;
+        Map<String,String> map =fblo;
         file2blobs.putAll(map);
         fblo.clear();
         Temp t=new Temp(fblo);
         writeObject(Repository.TempFile,t);
 
         map =fa.file2blobs;
-        for(Map.Entry<String,Blob> i:map.entrySet()){
+        for(Map.Entry<String,String> i:map.entrySet()){
             if(!file2blobs.containsKey(i.getKey())){
                 file2blobs.put(i.getKey(),i.getValue());
             }
@@ -71,7 +71,7 @@ public class Commit implements Serializable{
         Removal r= readObject(Repository.RemovalFile, Removal.class);
         if(r!=null){
             map =r.blobs;
-            for(Map.Entry<String,Blob> i:map.entrySet()){
+            for(Map.Entry<String,String> i:map.entrySet()){
                 file2blobs.remove(i.getKey());
             }// removal delete
             r.blobs.clear();
@@ -87,21 +87,21 @@ public class Commit implements Serializable{
         SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
         time= formatter.format(new Date(System.currentTimeMillis()));
         fa=far;
-        HashMap<String,Blob>fblo=readObject(Repository.TempFile,Temp.class).blobs;
-        Map<String,Blob> map =fblo;
+        HashMap<String,String>fblo=readObject(Repository.TempFile,Temp.class).blobs;
+        Map<String,String> map =fblo;
         file2blobs.putAll(map);
         fblo.clear();
         Temp t=new Temp(fblo);
         writeObject(Repository.TempFile,t);
 
         map =fa.file2blobs;
-        for(Map.Entry<String,Blob> i:map.entrySet()){
+        for(Map.Entry<String,String> i:map.entrySet()){
             if(!file2blobs.containsKey(i.getKey())){
                 file2blobs.put(i.getKey(),i.getValue());
             }
         }//compare with head,save the blobs of far different with self
         map =secfa.file2blobs;
-        for(Map.Entry<String,Blob> i:map.entrySet()){
+        for(Map.Entry<String,String> i:map.entrySet()){
             if(!file2blobs.containsKey(i.getKey())){
                 file2blobs.put(i.getKey(),i.getValue());
             }
@@ -110,7 +110,7 @@ public class Commit implements Serializable{
         Removal r= readObject(Repository.RemovalFile, Removal.class);
         if(r!=null){
             map =r.blobs;
-            for(Map.Entry<String,Blob> i:map.entrySet()){
+            for(Map.Entry<String,String> i:map.entrySet()){
                 file2blobs.remove(i.getKey());
             }// removal delete
         }

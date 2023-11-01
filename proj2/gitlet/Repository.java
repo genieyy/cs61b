@@ -49,7 +49,7 @@ public class Repository {
     public static Commit head;
     public final static File TempFile = join(Repository.GITLET_DIR, "Temp");
     public final static File RemovalFile = join(Repository.GITLET_DIR, "Removal");
-    public static HashMap<String,Blob> B;//temparary blobs
+    public static HashMap<String,String> B;//temparary blobs
     public static Commit InitCommit;//init commit
     public static File master = join(heads, "master");
 
@@ -123,7 +123,7 @@ public class Repository {
         if(B==null)B=new HashMap<>();
         Blob b=new Blob(filename);
         b.saveBlob();
-        B.put(filename,b);
+        B.put(filename,b.id);
         Temp t = new Temp(B);
         t.saveTemp();//save temprepo
         writeObject(Head,head);
@@ -135,16 +135,17 @@ public class Repository {
         head=readObject(Head,Commit.class);
         Temp t=readObject(TempFile,Temp.class);
         if(t.blobs.containsKey(filename)){
-            File f=join(blobs,t.blobs.get(filename).id);
+
+            File f=join(blobs,t.blobs.get(filename));
             f.delete();
             t.blobs.remove(filename);
             t.saveTemp();
         }
         if(head.file2blobs.containsKey(filename)){
-            File f=join(blobs,head.file2blobs.get(filename).id);
+            File f=join(blobs,head.file2blobs.get(filename));
             f.delete();
             Removal r=readObject(RemovalFile, Removal.class);
-            r.blobs.put(filename,new Blob(filename));
+            r.blobs.put(filename,new Blob(filename).id);
             r.saveRemoval();
         }
         if(!t.blobs.containsKey(filename)&&!head.file2blobs.containsKey(filename)){
@@ -238,7 +239,8 @@ public class Repository {
         head=readObject(Head, Commit.class);
         File file=join(WORK_DIR,filename);
         if(head.file2blobs.containsKey(filename)){
-            writeContents(file,head.file2blobs.get(filename).content);
+            Blob b=readObject(join(blobs,head.file2blobs.get(filename)), Blob.class);
+            writeContents(file,b.content);
         }
         else{
             System.out.println("File does not exist in that commit.");
@@ -258,7 +260,9 @@ public class Repository {
             System.out.println("File does not exist in that commit.");
             return;
         }
-        writeObject(join(WORK_DIR,filename),c.file2blobs.get(filename).content);
+        Blob b=readObject(join(blobs,c.file2blobs.get(filename)), Blob.class);
+        writeContents(join(WORK_DIR,filename),b.content);
+
     }
 
     public static void checkoutbranchfile(String branch) {
@@ -287,7 +291,8 @@ public class Repository {
         }//unchecked files
 
         for(String s:c.file2blobs.keySet()){
-            writeObject(join(WORK_DIR,s),c.file2blobs.get(s).content);
+            Blob b=readObject(join(blobs,c.file2blobs.get(s)), Blob.class);
+            writeContents(join(WORK_DIR,s),b.content);
         }//write files of the branch head
 
         Temp t=readObject(TempFile,Temp.class);
@@ -418,6 +423,16 @@ public class Repository {
                         !head.file2blobs.get(s).equals(sa.file2blobs.get(s))){
                     if(!c.file2blobs.get(s).equals(head.file2blobs.get(s))){
                         System.out.print("Encountered a merge conflict.");
+                        Blob b=readObject(join(blobs,head.file2blobs.get(s)), Blob.class);
+                        Blob bc=readObject(join(blobs,c.file2blobs.get(s)), Blob.class);
+                        writeObject(join(WORK_DIR,b.id),"<<<<<<< HEAD\n" +readContents(join(WORK_DIR,b.id))+
+                                "\n" +
+                                "=======\n" +readContents(join(WORK_DIR,bc.id))+
+                                "\n" +
+                                ">>>>>>>");
+                        addBlobs(s);
+                        cur=readObject(CurBranch, String.class);
+                        commitbuild("Merged "+branch+" into "+cur+".");
                     }
                 }
             }
@@ -426,11 +441,11 @@ public class Repository {
                     rmfiles(s);
                 }
             }
-            if(c.file2blobs.containsKey(s)&&!head.file2blobs.containsKey(s)){
-                if(c.file2blobs.get(s).equals(sa.file2blobs.get(s))){
+            if(c.file2blobs.containsKey(s)&&!head.file2blobs.containsKey(s)) {
+                if (c.file2blobs.get(s).equals(sa.file2blobs.get(s))) {
                     //remain absent
                 }
-
+            }
         }
 
         for(String s:c.file2blobs.keySet()){
@@ -441,6 +456,16 @@ public class Repository {
                 }
                 else{
                     System.out.print("Encountered a merge conflict.");
+                    Blob b=readObject(join(blobs,head.file2blobs.get(s)), Blob.class);
+                    Blob bc=readObject(join(blobs,c.file2blobs.get(s)), Blob.class);
+                    writeObject(join(WORK_DIR,b.id),"<<<<<<< HEAD\n" +readContents(join(WORK_DIR,b.id))+
+                            "\n" +
+                            "=======\n" +readContents(join(WORK_DIR,bc.id))+
+                            "\n" +
+                            ">>>>>>>");
+                    addBlobs(s);
+                    cur=readObject(CurBranch, String.class);
+                    commitbuild("Merged "+branch+" into "+cur+".");
                 }
             }
         }
