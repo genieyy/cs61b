@@ -53,7 +53,7 @@ public class Repository {
     public static File master = join(heads, "master");
 
     /* TODO: fill in the rest of this class. */
-    public static void setup() throws IOException, ParseException {
+    public static void setup(){
         /*if(GITLET_DIR.exists()){
             System.out.print("A Gitlet version-control system already exists in the current directory.");
             exit(0);
@@ -67,7 +67,11 @@ public class Repository {
         heads.mkdirs();
         writeObject(RemovalFile,new Removal(new HashMap<>()));
         writeObject(TempFile,new Temp(new HashMap<>()));
-        InitCommit = new Commit("initial commit");
+        try {
+            InitCommit = new Commit("initial commit");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         InitCommit.saveCommit();
         writeObject(CurBranch,"master");
         Utils.writeObject(Head, InitCommit);

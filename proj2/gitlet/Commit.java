@@ -38,13 +38,18 @@ public class Commit implements Serializable{
     /* TODO: fill in the rest of this class. */
     public Commit(){}
 
-    public Commit(String m) throws ParseException {
+    public Commit(String m){
         message=m;
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-        Date epochTime = dateFormat.parse("1970-01-01 00:00:00");
-        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
-        time= formatter.format(epochTime);
+        try {
+            Date epochTime = dateFormat.parse("1970-01-01 00:00:00");
+
+            SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
+            time = formatter.format(epochTime);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
 
         id= Utils.sha1(message,time,file2blobs.toString());
     }
