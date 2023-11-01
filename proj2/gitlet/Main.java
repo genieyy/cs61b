@@ -25,6 +25,10 @@ public class Main {
         String firstArg = args[0];
         switch (firstArg) {
             case "init" -> {
+                if(Repository.GITLET_DIR.exists()){
+                    System.out.println("A Gitlet version-control system already exists in the current directory.");
+                    System.exit(0);
+                }
                 validArgs(args, 1);
                 Repository.setup();
             }
