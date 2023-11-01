@@ -17,25 +17,21 @@ public class Main {
             System.out.println("Please enter a command.");
             System.exit(0);
         }
+
         String firstArg = args[0];
         switch (firstArg) {
             case "init" -> {
-                if (args.length != 1) {
-                    System.out.println("Please enter a command.");
-                    System.exit(0);
-                }
+                validArgs(args,1);
                 Repository.setup();
             }
             case "add" -> {
+               
                 for (int i = 1; i < args.length; ++i) {
                     Repository.addBlobs(args[i]);
                 }
             }
             case "commit" -> {
-                if (args.length != 2) {
-                    System.out.println("Please enter a commit message.");
-                    System.exit(0);
-                }
+                validArgs(args,2);
                 Repository.commitbuild(args[1]);
             }
             case "rm" -> {
@@ -52,10 +48,7 @@ public class Main {
                 Repository.global_log();
             }
             case "find" -> {
-                if (args.length != 2) {
-                    System.out.println("Please enter a command.");
-                    System.exit(0);
-                }
+                validArgs(args,2);
                 Repository.find_mesg(args[1]);
             }
             case "status" -> {
@@ -67,15 +60,19 @@ public class Main {
                 if(args.length==2) Repository.checkoutbranchfile(args[1]);
             }
             case "branch" -> {
+                validArgs(args,2);
                 Repository.create_branch(args[1]);
             }
             case "rm-branch" -> {
+                validArgs(args,2);
                 Repository.rm_branch(args[1]);
             }
             case "reset" -> {
+                validArgs(args,2);
                 Repository.reset(args[1]);
             }
             case "merge" -> {
+                validArgs(args,2);
                 Repository.Merge(args[1]);
             }
             default -> {
@@ -84,6 +81,13 @@ public class Main {
             }
         }
 
+
+    }
+    public static void validArgs(String[] args,int num){
+        if(args.length!=num){
+            System.out.println("Incorrect operands.");
+            return;
+        }
     }
 
 }
