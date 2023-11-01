@@ -43,14 +43,14 @@ public class Commit implements Serializable{
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
         Date epochTime = dateFormat.parse("1970-01-01 00:00:00");
-        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
+        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
         time= formatter.format(epochTime);
 
         id= Utils.sha1(message,time,file2blobs.toString());
     }
     public Commit(Commit far,String m){
         message=m;
-        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
+        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
         time= formatter.format(new Date(System.currentTimeMillis()));
         fa=far;
         HashMap<String,String>fblo=readObject(Repository.TempFile,Temp.class).blobs;
@@ -84,7 +84,7 @@ public class Commit implements Serializable{
     }
     public Commit(Commit far,Commit secfar,String m){
         message=m;
-        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy Z", Locale.ENGLISH);
+        SimpleDateFormat formatter= new SimpleDateFormat("EEE MMM d HH:mm:ss yyyy Z", Locale.ENGLISH);
         time= formatter.format(new Date(System.currentTimeMillis()));
         fa=far;
         HashMap<String,String>fblo=readObject(Repository.TempFile,Temp.class).blobs;

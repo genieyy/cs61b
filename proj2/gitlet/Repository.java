@@ -36,7 +36,6 @@ public class Repository {
     /**
      * The .gitlet directory.
      */
-    public static final File WORK_DIR = join(CWD, "work");
     public static final File GITLET_DIR = join(CWD, ".gitlet");
     public static final File objects = join(GITLET_DIR, "objects");
     public static final File commits = join(objects, "commits");
@@ -68,7 +67,7 @@ public class Repository {
         heads.mkdirs();
         writeObject(RemovalFile,new Removal(new HashMap<>()));
         writeObject(TempFile,new Temp(new HashMap<>()));
-        InitCommit = new Commit("init commit");
+        InitCommit = new Commit("initial commit");
         InitCommit.saveCommit();
         writeObject(CurBranch,"master");
         Utils.writeObject(Head, InitCommit);
@@ -89,6 +88,7 @@ public class Repository {
         Commit c = new Commit(head, m);
         head = c;
         writeObject(Head, head);//save head
+        cur=readObject(CurBranch,String.class);
         writeObject(join(heads,cur),head);//save branch head
         B.clear();//temprepo clear
         Temp t = new Temp(B);
@@ -97,7 +97,7 @@ public class Repository {
 
     }
     public static void addBlobs(String filename) {
-        File file = Utils.join(WORK_DIR, filename);
+        File file = Utils.join(CWD, filename);
         if (!file.exists()) {
             System.out.println("File does not exist.");
             exit(0);
@@ -116,6 +116,7 @@ public class Repository {
         if(head.file2blobs!=null){
             if (head.file2blobs.containsValue(Utils.sha1(Utils.readContentsAsString(file)))){
                 writeObject(Head,head);//save temprepo
+                cur=readObject(CurBranch,String.class);
                 writeObject(join(heads,cur),head);
                 return;
             }//headcommit have no this file
@@ -127,11 +128,12 @@ public class Repository {
         Temp t = new Temp(B);
         t.saveTemp();//save temprepo
         writeObject(Head,head);
+        cur=readObject(CurBranch,String.class);
         writeObject(join(heads,cur),head);
     }
 
     public static void rmfiles(String filename) {
-        File file = join(WORK_DIR, filename);
+        File file = join(CWD, filename);
         head=readObject(Head,Commit.class);
         Temp t=readObject(TempFile,Temp.class);
         if(t.blobs.containsKey(filename)){
@@ -237,7 +239,7 @@ public class Repository {
 
     public static void checkoutheadfile(String filename) {
         head=readObject(Head, Commit.class);
-        File file=join(WORK_DIR,filename);
+        File file=join(CWD,filename);
         if(head.file2blobs.containsKey(filename)){
             Blob b=readObject(join(blobs,head.file2blobs.get(filename)), Blob.class);
             writeContents(file,b.content);
@@ -261,7 +263,7 @@ public class Repository {
             return;
         }
         Blob b=readObject(join(blobs,c.file2blobs.get(filename)), Blob.class);
-        writeContents(join(WORK_DIR,filename),b.content);
+        writeContents(join(CWD,filename),b.content);
 
     }
 
@@ -281,7 +283,7 @@ public class Repository {
         Commit c=readObject(f, Commit.class);
         head=readObject(Head, Commit.class);
 
-        List<String> otfiles=Utils.plainFilenamesIn(WORK_DIR);
+        List<String> otfiles=Utils.plainFilenamesIn(CWD);
         for (String s:otfiles) {
             if(c.file2blobs.containsKey(s)&&head.file2blobs.containsKey(s)) {
                 System.out.println("There is an untracked file in the way; " +
@@ -292,7 +294,7 @@ public class Repository {
 
         for(String s:c.file2blobs.keySet()){
             Blob b=readObject(join(blobs,c.file2blobs.get(s)), Blob.class);
-            writeContents(join(WORK_DIR,s),b.content);
+            writeContents(join(CWD,s),b.content);
         }//write files of the branch head
 
         Temp t=readObject(TempFile,Temp.class);
@@ -341,7 +343,7 @@ public class Repository {
 
         Commit c=readObject(join(commits,commitid), Commit.class);
         head=readObject(Head, Commit.class);
-        List<String> otfiles=Utils.plainFilenamesIn(WORK_DIR);
+        List<String> otfiles=Utils.plainFilenamesIn(CWD);
 
         for (String s:otfiles) {
             if(c.file2blobs.containsKey(s)&&!head.file2blobs.containsKey(s)) {
@@ -425,9 +427,9 @@ public class Repository {
                         System.out.print("Encountered a merge conflict.");
                         Blob b=readObject(join(blobs,head.file2blobs.get(s)), Blob.class);
                         Blob bc=readObject(join(blobs,c.file2blobs.get(s)), Blob.class);
-                        writeObject(join(WORK_DIR,b.id),"<<<<<<< HEAD\n" +readContents(join(WORK_DIR,b.id))+
+                        writeObject(join(CWD,b.id),"<<<<<<< HEAD\n" +readContents(join(CWD,b.id))+
                                 "\n" +
-                                "=======\n" +readContents(join(WORK_DIR,bc.id))+
+                                "=======\n" +readContents(join(CWD,bc.id))+
                                 "\n" +
                                 ">>>>>>>");
                         addBlobs(s);
@@ -458,9 +460,9 @@ public class Repository {
                     System.out.print("Encountered a merge conflict.");
                     Blob b=readObject(join(blobs,head.file2blobs.get(s)), Blob.class);
                     Blob bc=readObject(join(blobs,c.file2blobs.get(s)), Blob.class);
-                    writeObject(join(WORK_DIR,b.id),"<<<<<<< HEAD\n" +readContents(join(WORK_DIR,b.id))+
+                    writeObject(join(CWD,b.id),"<<<<<<< HEAD\n" +readContents(join(CWD,b.id))+
                             "\n" +
-                            "=======\n" +readContents(join(WORK_DIR,bc.id))+
+                            "=======\n" +readContents(join(CWD,bc.id))+
                             "\n" +
                             ">>>>>>>");
                     addBlobs(s);
