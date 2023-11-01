@@ -25,7 +25,7 @@ public class Main {
                 Repository.setup();
             }
             case "add" -> {
-               
+
                 for (int i = 1; i < args.length; ++i) {
                     Repository.addBlobs(args[i]);
                 }
